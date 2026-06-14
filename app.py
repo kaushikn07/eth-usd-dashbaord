@@ -16,7 +16,7 @@ st.set_page_config(
     page_title="ETHUSD Quant Dashboard",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 # ── dark theme CSS ──────────────────────────────────────────────────────────
@@ -158,7 +158,13 @@ with st.spinner("Pulling latest ETH data from Delta Exchange…"):
         rows, latest, collected_at = [], {}, "—"
 
 df = pd.DataFrame(rows) if rows else pd.DataFrame()
-last30 = rows[-30:] if len(rows) >= 30 else rows
+
+# ── sidebar: window size ────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("### ⚙️ Settings")
+    window = st.slider("Window (days)", min_value=7, max_value=500, value=30, step=1)
+
+last30 = rows[-window:] if len(rows) >= window else rows
 
 # ── top bar ─────────────────────────────────────────────────────────────────
 col_sym, col_mid, col_right = st.columns([3, 4, 3])
@@ -236,7 +242,7 @@ with tab_ov:
         if last30:
             col_l, col_r = st.columns([2, 1])
             with col_l:
-                st.markdown("##### Direction Score — last 30 days")
+                st.markdown(f"##### Direction Score — last {window} days")
                 labels = [r["date"][5:] for r in last30]
                 vals   = [r.get("direction") or 0 for r in last30]
                 colors = ["rgba(34,197,94,0.7)" if v >= 0 else "rgba(239,68,68,0.7)" for v in vals]
@@ -266,7 +272,7 @@ with tab_ov:
 # DAILY ANALYSIS
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_analysis:
-    st.caption("Synthesises Direction + CLV + RVOL + Efficiency + ATR into a single read per day. Last 30 rows, newest first.")
+    st.caption(f"Synthesises Direction + CLV + RVOL + Efficiency + ATR into a single read per day. Last {window} rows, newest first.")
     if not rows:
         st.info("No data.")
     else:
@@ -276,16 +282,21 @@ with tab_analysis:
             lbl, col = stair_label(r)
             d = r.get("direction") or 0
             table_rows.append({
-                "Date":      r.get("date", "—"),
-                "DOW":       r.get("dow", "—"),
-                "Phase":     lbl,
-                "Direction": fmt(d, 2, sign=True),
-                "CLV":       fmt(r.get("clv"), 3),
-                "RVOL":      fmt(r.get("rvol"), 2),
-                "Efficiency":r.get("eff_regime", "—"),
-                "ATR State": r.get("atr_regime", "—"),
-                "R/ATR":     fmt(r.get("range_atr"), 2),
-                "Return%":   fmt(r.get("return_pct"), 2, sign=True),
+                "Date":          r.get("date", "—"),
+                "DOW":           r.get("dow", "—"),
+                "Phase":         lbl,
+                "Range":         fmt(r.get("range"), 2),
+                "ATR 14":        fmt(r.get("atr14"), 2),
+                "Range/ATR":     fmt(r.get("range_atr"), 2),
+                "Return%":       fmt(r.get("return_pct"), 2, sign=True),
+                "Direction":     fmt(d, 2, sign=True),
+                "Efficiency":    r.get("eff_regime", "—"),
+                "CLV":           fmt(r.get("clv"), 3),
+                "RVOL":          fmt(r.get("rvol"), 2),
+                "Volatility":    r.get("volatility", "—"),
+                "Participation": r.get("participation", "—"),
+                "Close":         r.get("close_regime", "—"),
+                "ATR State":     r.get("atr_regime", "—"),
             })
         st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
 
@@ -293,7 +304,7 @@ with tab_analysis:
 # STAIRCASE
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_stair:
-    st.caption("Each day labelled by staircase position. Last 30 days, newest first.")
+    st.caption(f"Each day labelled by staircase position. Last {window} days, newest first.")
     if not last30:
         st.info("No data.")
     else:
@@ -434,7 +445,7 @@ with tab_signal:
 # RSI CLOUD
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_rsi:
-    st.caption("RSI Momentum Structure Cloud metrics (Sheet 2) — last 30 days, newest first.")
+    st.caption(f"RSI Momentum Structure Cloud metrics (Sheet 2) — last {window} days, newest first.")
     if not rows:
         st.info("No data.")
     else:
