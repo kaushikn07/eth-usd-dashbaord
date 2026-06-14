@@ -471,7 +471,7 @@ def compute_sheet2(candles: list[dict]) -> list[dict]:
 
 def build_dataset() -> dict:
     print("Fetching candles from Delta Exchange...")
-    candles = fetch_candles(SYMBOL, CANDLE_RES, count=60)
+    candles = fetch_candles(SYMBOL, CANDLE_RES, count=510)
     print(f"  Received {len(candles)} candles.")
 
     sheet1 = compute_sheet1(candles)
