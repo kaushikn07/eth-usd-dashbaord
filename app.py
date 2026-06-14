@@ -162,7 +162,7 @@ df = pd.DataFrame(rows) if rows else pd.DataFrame()
 # ── sidebar: window size ────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### ⚙️ Settings")
-    window = st.slider("Window (days)", min_value=7, max_value=500, value=30, step=1)
+    window = st.number_input("Window (days)", min_value=1, value=30, step=1)
 
 last30 = rows[-window:] if len(rows) >= window else rows
 
